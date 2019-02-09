@@ -35,58 +35,23 @@ class FifaSpider(scrapy.Spider):
     @staticmethod
     def parse_player(response):
         name = (response
-                .css("div.media-body")
-                .css("h2.media-heading::text")
+                .css("div.col-lg-8")
+                .css("div.card")
+                .css("h5.card-header::text")
                 .extract()[0])
 
-        try:
-            team = (
-                response.css("div.col-lg-4")
-                .css("div.panel-heading")
-                .css("a::attr(title)")[2]
-                .extract()
-            )
-        except IndexError:
-            team = (
-                response.css("div.col-lg-4")
-                .css("div.panel-heading")
-                .css("a::attr(title)")[0]
-                .extract()
-            )
+        team = (response.css("div.team")
+                .css("a.link-team::attr(title)")[0]
+                .extract())
 
-        number = (
-            response.css("div.col-lg-4")
-            .css("div.panel-body")
-            .css("span.pull-right")[3]
-            .css("span::text")
-            .extract()[0]
-        )
-
-        if len(number) == 4:
-            number = (
-                response.css("div.col-lg-4")
-                .css("div.panel-body")
-                .css("span.pull-right")[1]
-                .css("span::text")
-                .extract()[0]
-            )
-
-        position = (
-            response.css("div.col-lg-5")
-            .css("div.panel-body")
-            .css("span.label::text")
-            .extract_first()
-        )
-
-        rating = (
-            response.css("div.col-lg-5")
-            .css("div.panel-heading")
-            .css("span.label")[0]
-            .css("span.label::text")
-            .extract()[0]
-        )
-
-        nationality = slugify(response.css("h2.subtitle a::text").extract()[0])
+        position = response.css("div.team").css("span.float-right").css("a::attr(title)").extract()[0]
+        number = response.css("div.team").css("span.float-right::text")[0].extract()
+        rating = (response
+                  .css("div.col-lg-8")
+                  .css("div.card")
+                  .css("h5")
+                  .css("span.rating::text").extract()[0])
+        nationality = slugify(response.css("a.link-nation::attr(title)").extract()[0])
 
         yield {
             "name": slugify(name),
