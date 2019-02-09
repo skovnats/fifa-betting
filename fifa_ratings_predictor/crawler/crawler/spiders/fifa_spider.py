@@ -27,7 +27,12 @@ class FifaSpider(scrapy.Spider):
                     url = response.urljoin(link[0])
                     yield scrapy.Request(url, callback=self.parse_player)
 
-        next_page = response.css("li.next a::attr(href)").extract_first()
+        next_page = None
+        link_names = response.css("a.page-link::text").extract()
+        links = response.css("a.page-link::attr(href)").extract()
+        for name, link in zip(link_names, links):
+            if name.lower() == "next page":
+                next_page = link
         if next_page is not None:
             next_page = response.urljoin(next_page)
             yield scrapy.Request(next_page, callback=self.parse)
