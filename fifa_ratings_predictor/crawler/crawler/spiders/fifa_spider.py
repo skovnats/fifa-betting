@@ -201,57 +201,37 @@ class FifaIndexTeamScraper(scrapy.Spider):
                 url = response.urljoin(link)
                 yield scrapy.Request(url, callback=self.parse_team)
 
-        next_page = response.css("li.next a::attr(href)").extract_first()
-        if next_page is not None and int(next_page.split("/")[-2]) < 10:
+        next_page = None
+        link_names = response.css("a.page-link::text").extract()
+        links = response.css("a.page-link::attr(href)").extract()
+        for name, link in zip(link_names, links):
+            if name.lower() == "next page":
+                next_page = link
+        if next_page is not None:
             next_page = response.urljoin(next_page)
             yield scrapy.Request(next_page, callback=self.parse)
 
-    @staticmethod
-    def parse_team(response):
-        team = slugify(response.css(".media-heading::text").extract_first())
+    def parse_team(self, response):
+        team = slugify(response.css("div.pl-3").css("h1::text").extract_first())
 
-        for i in range(1, len(response.css('tr'))):
-            name_css = (
-                ".table > "
-                "tbody:nth-child(2) > "
-                "tr:nth-child({}) > "
-                "td:nth-child(6) > "
-                "a:nth-child(1)::attr(title)"
-            )
-            name = slugify(response.css(name_css.format(i)).extract_first())
+        for tr in response.css("table.table-players").css("tbody").css("tr"):
+            rows = tr.css("td")
 
-            number_css = (
-                ".table > " "tbody:nth-child(2) > " "tr:nth-child({}) > " "td:nth-child(1)::t" "ext"
-            )
-            number = int(response.css(number_css.format(i)).extract_first())
+            # skip not valid rows (like loaned players who don't have kit number)
+            if not rows or not len(rows) == 8:
+                continue
 
-            nationality_css = (
-                ".table > "
-                "tbody:nth-child(2) > "
-                "tr:nth-child({}) > "
-                "td:nth-child(4) > "
-                "a:nth-child(1) > img:nth-child(1)::attr(title)"
-            )
+            number = int(rows[0].css("::text").extract_first())
+
+            position = rows[1].css("::text").extract_first()
+
+            name = rows[2].css("a.link-player::attr(title)").extract_first()
+
             nationality = slugify(
-                response.css(nationality_css.format(i)).extract_first())
-
-            position_css = (
-                ".table > "
-                "tbody:nth-child(2) > "
-                "tr:nth-child({}) > "
-                "td:nth-child(7) > "
-                "a:nth-child(1) > span:nth-child(1)::text"
+                rows[3].css("a.link-nation::attr(title)").extract_first()
             )
-            position = response.css(position_css.format(i)).extract_first()
 
-            rating_css = (
-                "table > t"
-                "body:nth-child(2) > t"
-                "r:nth-child({}) > t"
-                "d:nth-child(5) > s"
-                "pan:nth-child(1)::text"
-            )
-            rating = response.css(rating_css.format(i)).extract_first()
+            rating = rows[4].css("::text").extract_first()
 
             yield {
                 "name": slugify(name),
