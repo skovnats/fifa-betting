@@ -233,6 +233,9 @@ class FifaIndexTeamScraper(scrapy.Spider):
 
             rating = rows[4].css("::text").extract_first()
 
+            if position in ("Sub", "Res"):
+                position = rows[6].css("a.link-position::attr(title)").extract_first()
+
             yield {
                 "name": slugify(name),
                 "team": team,
