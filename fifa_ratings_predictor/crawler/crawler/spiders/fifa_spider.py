@@ -1,7 +1,5 @@
 import scrapy
 from slugify import slugify
-#from scrapy.shell import inspect_response
-#inspect_response(response, self)
 
 
 class FifaSpider(scrapy.Spider):
@@ -51,7 +49,8 @@ class FifaSpider(scrapy.Spider):
                 .css("a.link-team::attr(title)")[0]
                 .extract())
 
-        position = response.css("div.team").css("span.float-right").css("a::attr(title)").extract()[0]
+        #position = response.css("div.team").css("span.float-right").css("a::attr(title)").extract()[0]
+        position = response.css("div.card-body").css("span.float-right").css("a::attr(title)").extract()[0]
         number = response.css("div.team").css("span.float-right::text")[0].extract()
         rating = (response
                   .css("div.col-lg-8")
