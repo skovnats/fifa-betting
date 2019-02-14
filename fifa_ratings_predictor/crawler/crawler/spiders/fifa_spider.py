@@ -1,5 +1,7 @@
 import scrapy
 from slugify import slugify
+#from scrapy.shell import inspect_response
+#inspect_response(response, self)
 
 
 class FifaSpider(scrapy.Spider):
@@ -186,6 +188,7 @@ class FifaIndexTeamScraper(scrapy.Spider):
     def start_requests(self):
         urls = [
             "https://www.fifaindex.com/teams/",
+            "https://www.fifaindex.com/teams/fifa18_278/",
             "https://www.fifaindex.com/teams/fifa17_173/",
             "https://www.fifaindex.com/teams/fifa16_73/",
             "https://www.fifaindex.com/teams/fifa15_14/",
@@ -209,7 +212,7 @@ class FifaIndexTeamScraper(scrapy.Spider):
                 next_page = link
         if next_page is not None:
             next_page = response.urljoin(next_page)
-            yield scrapy.Request(next_page, callback=self.parse)
+            yield scrapy.Request(next_page, callback=self.parse_team)
 
     def parse_team(self, response):
         team = slugify(response.css("div.pl-3").css("h1::text").extract_first())

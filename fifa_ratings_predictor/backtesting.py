@@ -123,7 +123,7 @@ def main():
 
     feature_vectors = np.vstack((x for x in feature_vectors))
 
-    probabilities = net.predict(feature_vectors, model_name='./models/' + league + '-backtest/deep')
+    probabilities = net.predict(feature_vectors, model_name='./models/' + league + '/deep')
 
     match_data = [match for match in match_data if match['match number'] not in errors]
 
@@ -181,8 +181,8 @@ def plot_backtest(bankroll, roi, plot_title, name='graph.png'):
     for fname in flist:
         try:
             s = matplotlib.font_manager.FontProperties(fname=fname).get_name()
-            if 'bank' in s:
-                props = matplotlib.font_manager.FontProperties(fname=fname)
+            #if 'bank' in s:
+            #    props = matplotlib.font_manager.FontProperties(fname=fname)
         except RuntimeError:
             pass
 
@@ -191,12 +191,14 @@ def plot_backtest(bankroll, roi, plot_title, name='graph.png'):
     ax = plt.axes()
     plt.plot(np.arange(len(bankroll)), bankroll, c='#113355')
     ax.text(0.05, 0.95, 'ROI: {0:.2%}'.format(roi), transform=ax.transAxes, fontsize=10,
-            verticalalignment='top', bbox=propies, fontproperties=props, color='white')
+            verticalalignment='top', bbox=propies, color='white')
     fig.set_facecolor('#aabbcc')
     ax.set_facecolor('#aabbcc')
-    ax.set_title(plot_title, fontproperties=props, color="#223355")
+    ax.set_title(plot_title, color="#223355")
     plt.savefig(name, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor())
 
 
 if __name__ == '__main__':
     tracker, bankroll, odds = main()
+    print(tracker, bankroll, odds)
+    plot_backtest(bankroll, tracker.roi, 'plot_title')

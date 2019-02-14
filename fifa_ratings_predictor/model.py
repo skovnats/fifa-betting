@@ -50,6 +50,7 @@ class NeuralNet:
     def train_model(self, X, y, X_val, y_val, model_name):
 
         best_val_loss = 0.05
+        best_val_loss = 100500
 
         with tf.Session(graph=self.graph) as sess:
 
@@ -97,15 +98,15 @@ if __name__ == '__main__':
 
     league = 'F1'
 
-    inputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-13-14.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-14-15.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-15-16.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-16-17.npy')))
+    inputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
+                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2014-2015.npy'),
+                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2015-2016.npy'),
+                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2016-2017.npy')))
     inputs = normalise_features(inputs)
-    outputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-13-14.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-14-15.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-15-16.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-16-17.npy'))).reshape(-1, 3)
+    outputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2013-2014.npy'),
+                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2014-2015.npy'),
+                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy'),
+                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2016-2017.npy'))).reshape(-1, 3)
 
     nan_rows = np.where(outputs != outputs)[0]
 
