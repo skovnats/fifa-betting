@@ -34,7 +34,7 @@ class NeuralNet:
             self.output = tf.nn.softmax(self.output, name='softmax')
 
             with tf.name_scope('losses') as scope:
-                self.loss = tf.losses.absolute_difference(self.target, self.output)
+                self.loss = tf.losses.softmax_cross_entropy(self.target, self.output)
 
                 self.train = tf.train.MomentumOptimizer(self.learning_rate, 0.99).minimize(self.loss)
 
