@@ -145,13 +145,16 @@ def assign_odds_to_match(matchlineups, fd):
             away_team = None
 
         for index, row in fd.iterrows():
-
             if home_team == slugify(row["HomeTeam"]) and away_team == slugify(
                 row["AwayTeam"]
             ):
+                try:
+                    row_date = datetime.datetime.strptime(row["Date"], "%d/%m/%y")
+                except ValueError:
+                    row_date = datetime.datetime.strptime(row["Date"], "%d/%m/%Y")
                 if datetime.datetime.strptime(
                     match["info"]["date"], "%d %B %Y"
-                ) == datetime.datetime.strptime(row["Date"], "%d/%m/%y"):
+                ) == row_date:
                     match["info"]["home odds"] = row["PSH"]
                     match["info"]["draw odds"] = row["PSD"]
                     match["info"]["away odds"] = row["PSA"]
