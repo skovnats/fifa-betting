@@ -108,6 +108,15 @@ if __name__ == '__main__':
                         np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy'),
                         np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2016-2017.npy'))).reshape(-1, 3)
 
+    #inputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2014-2015.npy'),
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2015-2016.npy')))
+    #inputs = normalise_features(inputs)
+    #outputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2013-2014.npy'),
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2014-2015.npy'),
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy'))).reshape(-1, 3)
+
+
     nan_rows = np.where(outputs != outputs)[0]
 
     inputs = np.delete(inputs, nan_rows, axis=0)

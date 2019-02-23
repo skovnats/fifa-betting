@@ -9,6 +9,7 @@ class FifaSpider(scrapy.Spider):
 
     def start_requests(self):
         urls = [
+            "https://www.fifaindex.com/players/fifa18_278/",
             "https://www.fifaindex.com/players/fifa17_173/",
             "https://www.fifaindex.com/players/fifa16_73/",
             "https://www.fifaindex.com/players/fifa15_14/",
@@ -86,7 +87,14 @@ class MatchSpider(scrapy.Spider):
             "http://www.betstudy.com/soccer-stats/c/france/ligue-1/d/results/2015-2016/",
             "http://www.betstudy.com/soccer-stats/c/france/ligue-1/d/results/2014-2015/",
             "http://www.betstudy.com/soccer-stats/c/france/ligue-1/d/results/2013-2014/",
-        ]
+        ]        
+        #urls = [
+        #    "http://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2017-2018/",
+        #    "http://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2016-2017/",
+        #    "http://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2015-2016/",
+        #    "http://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2014-2015/",
+        #    "https://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2013-2014/",
+        #]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse_fixtures_page)
 

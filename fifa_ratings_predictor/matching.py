@@ -118,8 +118,6 @@ def create_feature_vector_from_players(players):
     defence = []
     midfield = []
     attack = []
-
-    import pdb; pdb.set_trace()
     for player in players:
         if player["info"]["general position"] == "goalkeeper":
             #goalkeeper.append(int(player["rating"]))
@@ -238,11 +236,14 @@ def extract_match_football_players_teams_games(league='F1',season='2013-2014'):
 
 if __name__ == "__main__":
     #
-    league = 'F1'
+    leagues = ['F1']
     seasons = ["2013-2014","2014-2015","2015-2016","2016-2017","2017-2018","2018-2019"]
+    #seasons = ["2017-2018","2018-2019"]
+    #seasons = ["2018-2019"]
     #
     for season in seasons:
-        print(f'{league}-{season}')
-        extract_match_football_players_teams_games(league,season)
+        for league in leagues:
+            print(f'{league}-{season}')
+            extract_match_football_players_teams_games(league,season)
 
 

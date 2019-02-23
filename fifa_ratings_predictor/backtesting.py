@@ -64,12 +64,13 @@ def main():
     bet_tracker = BetTracker()
 
     league = 'F1'
+    season = '2017-2018'#
 
-    match_data = read_match_data(season='2017-2018', league=league)
+    match_data = read_match_data(season=season, league=league)
 
     match_data = assign_odds_to_match(match_data, read_all_football_data(league=league))
 
-    player_data = read_player_data(season='2017-2018')
+    player_data = read_player_data(season=season)
 
     net = NeuralNet()
 
