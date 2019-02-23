@@ -1,5 +1,72 @@
 import scrapy
+from pathlib import Path
+import pickle
 from slugify import slugify
+
+
+class FifaHtmlSpider(scrapy.Spider):
+    name = "fifahtml"
+
+    save_data_root = Path(__file__).parent / ".." / ".." / ".." / "data" / "fifahtml"
+
+    # TODO - run this for extended period of time to get all players
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.save_data_root.mkdir(exist_ok=True)
+
+    def start_requests(self):
+        urls = [
+            "https://www.fifaindex.com/players/fifa17_173/",
+            "https://www.fifaindex.com/players/fifa16_73/",
+            "https://www.fifaindex.com/players/fifa15_14/",
+            "https://www.fifaindex.com/players/fifa14_13/",
+            "https://www.fifaindex.com/players/fifa13_10/",
+        ]
+        for url in urls:
+            yield scrapy.Request(url=url, callback=self.parse)
+
+    def parse(self, response):
+        for row in response.css("tr td"):
+            link = row.css("a::attr(href)").extract()
+            # print(name, link)
+            if link:
+                if "/player/" in link[0]:
+                    url = response.urljoin(link[0])
+                    yield scrapy.Request(url, callback=self.parse_player)
+
+        next_page = None
+        link_names = response.css("a.page-link::text").extract()
+        links = response.css("a.page-link::attr(href)").extract()
+        for name, link in zip(link_names, links):
+            if name.lower() == "next page":
+                next_page = link
+        if next_page is not None:
+            next_page = response.urljoin(next_page)
+            yield scrapy.Request(next_page, callback=self.parse)
+
+    def parse_player(self, response):
+        season = response.request.url.split("/")[-2]
+
+        name = slugify(response
+                       .css("div.col-lg-8")
+                       .css("div.card")
+                       .css("h5.card-header::text")
+                       .extract()[0])
+
+        team = slugify(response.css("div.team")
+                       .css("a.link-team::attr(title)")[0]
+                       .extract())
+
+        saved_path = (self.save_data_root / season / team / name).with_suffix(".html")
+        saved_path.parent.mkdir(exist_ok=True, parents=True)
+        if not saved_path.exists():
+            saved_path.write_bytes(response.body)
+            yield {
+                "name": name,
+                "season": season,
+                "url": response.request.url,
+                "path": str(saved_path),
+            }
 
 
 class FifaSpider(scrapy.Spider):
