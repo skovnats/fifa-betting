@@ -24,7 +24,7 @@ class NeuralNet:
 
     def build_model(self):
         with self.graph.as_default():
-            self.input = tf.placeholder(tf.float32, shape=[None, 36], name='input')
+            self.input = tf.placeholder(tf.float32, shape=[None, 39], name='input')
             self.target = tf.placeholder(tf.float32, shape=[None, 3], name='target')
             self.keep_prob = tf.placeholder(tf.float32, name='keep_prob')
 
