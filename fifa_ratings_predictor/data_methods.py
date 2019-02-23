@@ -167,6 +167,17 @@ def get_goals(match):
     return match["info"]["home goals"], match["info"]["away goals"]
 
 
+def get_target_from_goals(home_goals, away_goals):
+    target = [0, 0, 0]
+    if home_goals > away_goals:
+        target[0] = 1
+    elif home_goals == away_goals:
+        target[1] = 1
+    else:
+        target[2] = 1
+    return target
+
+
 def get_season(match):
     return match["info"]["season"]
 

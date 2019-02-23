@@ -3,6 +3,7 @@ import numpy as np
 from fifa_ratings_predictor.data_methods import (
     assign_odds_to_match,
     get_goals,
+    get_target_from_goals,
     get_lineup_names,
     get_lineup_nationalities,
     get_lineup_numbers,
@@ -218,8 +219,11 @@ def extract_match_football_players_teams_games(league='F1',season='2013-2014'):
                 away_players_matched
             )
 
-            feature_vectors.append(home_feature_vector + away_feature_vector)
-            targets.append([home_odds, draw_odds, away_odds])
+            feature_vector = home_feature_vector + away_feature_vector
+            feature_vector.extend([home_odds, draw_odds, away_odds])
+            feature_vectors.append(feature_vector)
+
+            targets.append(get_target_from_goals(home_goals, away_goals))
 
         except Exception as exception:
             print("There is an issues with the above match")
