@@ -220,7 +220,7 @@ def extract_match_football_players_teams_games(league='F1',season='2013-2014'):
             )
 
             feature_vector = home_feature_vector + away_feature_vector
-            feature_vector.extend([home_odds, draw_odds, away_odds])
+            feature_vector.extend([1.0 / home_odds, 1.0 / draw_odds, 1.0 / away_odds])
             feature_vectors.append(feature_vector)
 
             targets.append(get_target_from_goals(home_goals, away_goals))
