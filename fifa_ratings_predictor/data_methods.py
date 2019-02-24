@@ -43,8 +43,8 @@ def read_match_data(season=None, sort=True, league="E0"):
     for match in data:
         match["info"]["season"] = assign_season_to_match(match["info"]["date"])
 
-    for match in data:
-        match["info"]["season"] = assign_season_to_match(match["info"]["date"])
+    #for match in data:
+    #    match["info"]["season"] = assign_season_to_match(match["info"]["date"])
 
     if season is not None:
         data = [match for match in data if match["info"]["season"] == season]
@@ -80,6 +80,7 @@ def read_all_football_data(league):
     all_files = glob.glob(path + "/*.csv")
     list_ = []
     for file_ in all_files:
+        #print(file_)
         df = pd.read_csv(file_)
         list_.append(df)
     df = pd.concat(list_, sort=False)
@@ -92,7 +93,8 @@ def read_all_football_data(league):
 
 def normalise_features(vector):
     assert isinstance(vector, np.ndarray)
-    return ((vector - 50) / (100 - 50)).clip(min=0)
+    vector[:,0:36] = ((vector[:,0:36] - 50) / (100 - 50)).clip(min=0)
+    return vector
 
 
 def convert_date_to_datetime_object(date, string_format="%d %B %Y"):
@@ -141,8 +143,11 @@ def assign_odds_to_match(matchlineups, fd):
             ]
 
         except KeyError:
+            print(match["info"]["home team"])
+            print(match["info"]["away team"])
             home_team = None
             away_team = None
+            raise
 
         for index, row in fd.iterrows():
             if home_team == slugify(row["HomeTeam"]) and away_team == slugify(
@@ -158,6 +163,10 @@ def assign_odds_to_match(matchlineups, fd):
                     match["info"]["home odds"] = row["PSH"]
                     match["info"]["draw odds"] = row["PSD"]
                     match["info"]["away odds"] = row["PSA"]
+                    #
+                    match["info"]["home odds max"] = row["BbMxH"]
+                    match["info"]["draw odds max"] = row["BbMxD"]
+                    match["info"]["away odds max"] = row["BbMxA"]
                     break
 
     return matchlineups
@@ -215,4 +224,10 @@ def get_match_odds(match):
         match["info"]["home odds"],
         match["info"]["draw odds"],
         match["info"]["away odds"],
+    )
+def get_match_odds_max(match):
+    return (
+        match["info"]["home odds max"],
+        match["info"]["draw odds max"],
+        match["info"]["away odds max"],
     )

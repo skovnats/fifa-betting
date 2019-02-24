@@ -154,7 +154,7 @@ class MatchSpider(scrapy.Spider):
             "http://www.betstudy.com/soccer-stats/c/france/ligue-1/d/results/2015-2016/",
             "http://www.betstudy.com/soccer-stats/c/france/ligue-1/d/results/2014-2015/",
             "http://www.betstudy.com/soccer-stats/c/france/ligue-1/d/results/2013-2014/",
-        ]        
+        ]
         #urls = [
         #    "http://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2017-2018/",
         #    "http://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2016-2017/",
@@ -162,6 +162,20 @@ class MatchSpider(scrapy.Spider):
         #    "http://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2014-2015/",
         #    "https://www.betstudy.com/soccer-stats/c/england/premier-league/d/results/2013-2014/",
         #]
+        urls = [
+            "http://www.betstudy.com/soccer-stats/c/spain/primera-division/d/results/2017-2018/",
+            "http://www.betstudy.com/soccer-stats/c/spain/primera-division/d/results/2016-2017/",
+            "http://www.betstudy.com/soccer-stats/c/spain/primera-division/d/results/2015-2016/",
+            "http://www.betstudy.com/soccer-stats/c/spain/primera-division/d/results/2014-2015/",
+            "https://www.betstudy.com/soccer-stats/c/spain/primera-division/d/results//2013-2014/",
+        ]
+        urls = [
+            "http://www.betstudy.com/soccer-stats/c/germany/bundesliga/d/results/2017-2018/",
+            "http://www.betstudy.com/soccer-stats/c/germany/bundesliga/d/results/2016-2017/",
+            "http://www.betstudy.com/soccer-stats/c/germany/bundesliga/d/results/2015-2016/",
+            "http://www.betstudy.com/soccer-stats/c/germany/bundesliga/d/results/2014-2015/",
+            "https://www.betstudy.com/soccer-stats/c/germany/bundesliga/d/results//2013-2014/",
+        ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse_fixtures_page)
 

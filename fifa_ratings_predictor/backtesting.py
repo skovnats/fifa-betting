@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 import fifa_ratings_predictor.constants as constants
 from fifa_ratings_predictor.data_methods import read_match_data, read_player_data, normalise_features, \
-    assign_odds_to_match, read_all_football_data
+    assign_odds_to_match, read_all_football_data, get_match_odds, get_match_odds_max
 from fifa_ratings_predictor.matching import match_lineups_to_fifa_players, create_feature_vector_from_players
 from fifa_ratings_predictor.model import NeuralNet
 
@@ -60,11 +60,12 @@ def calculate_stake(odds, method='constant profit', constant_profit=2, probabili
     return stake
 
 
-def main():
+def main(league='F1',league_model='F1',season='2013-2014', season_model='2016-2017'):
     bet_tracker = BetTracker()
 
-    league = 'F1'
-    season = '2017-2018'#
+    #league = 'F1'
+    #league_model = 'F1'
+    #season = '2013-2014'
 
     match_data = read_match_data(season=season, league=league)
 
@@ -112,8 +113,14 @@ def main():
 
             home_feature_vector = create_feature_vector_from_players(home_players_matched)
             away_feature_vector = create_feature_vector_from_players(away_players_matched)
-
-            feature_vector = np.array(home_feature_vector + away_feature_vector).reshape(-1, 36)
+            #
+            home_odds, draw_odds, away_odds  = get_match_odds(match)
+            home_odds_max, draw_odds_max, away_odds_max  = get_match_odds_max(match)
+            #
+            feature_vector = home_feature_vector + away_feature_vector
+            feature_vector.extend([1.0 / home_odds, 1.0 / draw_odds, 1.0 / away_odds])
+            #
+            feature_vector = np.array(feature_vector).reshape(-1, len(feature_vector))
 
             feature_vectors.append(normalise_features(feature_vector))
 
@@ -124,42 +131,114 @@ def main():
 
     feature_vectors = np.vstack((x for x in feature_vectors))
 
-    probabilities = net.predict(feature_vectors, model_name='./models/' + league + '/deep')
+    probabilities = net.predict(feature_vectors, model_name=f'./models/{league_model}-{season_model}' +
+                                                                                    '/deep')
 
     match_data = [match for match in match_data if match['match number'] not in errors]
 
     for match, probability in zip(match_data, probabilities):
+        #import pdb; pdb.set_trace()
 
         # print(match['info']['date'], match['info']['home team'], match['info']['away team'])
 
-        pred_home_odds, pred_draw_odds, pred_away_odds = [1 / x for x in probability]
+        pred_home_odds, pred_draw_odds, pred_away_odds = [1/x for x in probability]
 
         home_odds, draw_odds, away_odds = match['info']['home odds'], match['info']['draw odds'], match['info'][
             'away odds']
+        home_odds_max, draw_odds_max, away_odds_max = match['info']['home odds max'], match['info']['draw odds max'], match['info'][
+            'away odds max']
 
         all_odds.append((pred_home_odds, home_odds))
         all_odds.append((pred_away_odds, away_odds))
+        #
+        imax = probability.argmax()
 
-        if pred_home_odds < home_odds < 3.2 and 0.02 <= probability[0] - 1 / home_odds:
-            stake = calculate_stake(home_odds, probability=1 / pred_home_odds, method='kelly',
+        if (probability[0] > 0.51):
+        #if (pred_home_odds < home_odds < 3.2) & (0.02 <= probability[0] - 1 / home_odds):
+        #if imax == 0:
+            #import pdb; pdb.set_trace()
+            stake = calculate_stake(home_odds, probability=probability[0], method='kelly',
                                     constant_profit=20) * bet_tracker.bankroll
-            profit = stake * home_odds - stake
+            if (stake < 0.001*bet_tracker.bankroll):
+                continue
+            #
+            #if (pred_home_odds < home_odds*0.9 < 3.2):
+            #    stack = max(0.1*bet_tracker.bankroll,stake)
+
+            #profit = stake * home_odds - stake
+            profit = stake * home_odds_max - stake
             bet = Bet(true_odds=home_odds, predicted_odds=pred_home_odds, stake=stake, profit=profit, match=match,
                       type='home')
             bet_tracker.make_bet(bet)
+            #
+            print(probability)
+            print(f'stake:{stake},profit:{profit}')
+            print(stake * home_odds_max - stake,stake * home_odds - stake)
+            print(home_odds, draw_odds, away_odds)
+            print(match['info']['home goals'],match['info']['away goals'])
+            print(stake,profit,bet_tracker.bankroll,bet_tracker.invested)
+            #
             if match['info']['home goals'] > match['info']['away goals']:
                 bet_tracker.bet_won()
             else:
                 bet_tracker.bet_lost()
             bank.append(bet_tracker.bankroll)
-        elif pred_away_odds < away_odds < 3.2 and 0.02 <= probability[2] - 1 / away_odds:
-            stake = calculate_stake(away_odds, probability=1 / pred_away_odds, method='kelly',
+        if (probability[2] > 0.51):
+        #elif (pred_away_odds < away_odds < 3.2) & (0.02 <= probability[2] - 1 / away_odds):
+        #if imax == 1:
+            #import pdb; pdb.set_trace()
+            stake = calculate_stake(away_odds, probability=probability[2], method='kelly',
                                     constant_profit=20) * bet_tracker.bankroll
-            profit = stake * away_odds - stake
+            if (stake < 0.001*bet_tracker.bankroll):
+                continue
+            #
+            #if (pred_away_odds < away_odds*0.9 < 3.2):
+            #    stack = max(0.1*bet_tracker.bankroll,stake)
+
+            #profit = stake * away_odds - stake
+            profit = stake * away_odds_max - stake
             bet = Bet(true_odds=away_odds, predicted_odds=pred_away_odds, stake=stake, profit=profit, match=match,
                       type='away')
             bet_tracker.make_bet(bet)
+            #
+            print(probability)
+            print(f'stake:{stake},profit:{profit}')
+            print(stake * home_odds_max - stake,stake * home_odds - stake)
+            print(home_odds, draw_odds, away_odds)
+            print(match['info']['home goals'],match['info']['away goals'])
+            print(stake,profit,bet_tracker.bankroll,bet_tracker.invested)
+            #
             if match['info']['home goals'] < match['info']['away goals']:
+                bet_tracker.bet_won()
+            else:
+                bet_tracker.bet_lost()
+            bank.append(bet_tracker.bankroll)
+        if (probability[1] > 0.51):
+        #elif (pred_draw_odds < draw_odds < 3.2) & (0.02 <= probability[1] - 1 / draw_odds):
+        #if imax == 2:
+            #import pdb; pdb.set_trace()
+            stake = calculate_stake(draw_odds, probability=probability[1], method='kelly',
+                                    constant_profit=20) * bet_tracker.bankroll
+            if (stake < 0.001*bet_tracker.bankroll):
+                continue
+            #
+           #if (pred_draw_odds < draw_odds*0.9 < 3.2):
+           #    stack = max(0.1*bet_tracker.bankroll,stake)
+            #
+            profit = stake * draw_odds_max - stake
+            #profit = stake * draw_odds - stake
+            bet = Bet(true_odds=draw_odds, predicted_odds=pred_draw_odds, stake=stake, profit=profit, match=match,
+                      type='draw')
+            bet_tracker.make_bet(bet)
+            #
+            print(probability)
+            print(f'stake:{stake},profit:{profit}')
+            print(stake * home_odds_max - stake,stake * home_odds - stake)
+            print(home_odds, draw_odds, away_odds)
+            print(match['info']['home goals'],match['info']['away goals'])
+            print(stake,profit,bet_tracker.bankroll,bet_tracker.invested)
+            #
+            if match['info']['home goals'] == match['info']['away goals']:
                 bet_tracker.bet_won()
             else:
                 bet_tracker.bet_lost()
@@ -200,6 +279,17 @@ def plot_backtest(bankroll, roi, plot_title, name='graph.png'):
 
 
 if __name__ == '__main__':
-    tracker, bankroll, odds = main()
-    print(tracker, bankroll, odds)
-    plot_backtest(bankroll, tracker.roi, 'plot_title')
+    leagues=['SP1','D1','F1','E0']
+    league_model='F1'
+    season_model = '2013-2014'
+    seasons = ['2013-2014', '2014-2015', '2015-2016', '2016-2017', '2017-2018']
+    #seasons = ['2016-2017', '2017-2018']
+    ##
+    for league in leagues:
+        for season in seasons:
+            print(league,league,season)
+            #print(league,league_model,season)
+            #tracker, bankroll, odds = main(league,league_model,season, season_model)
+            tracker, bankroll, odds = main(league,league,season, season)
+            print(tracker, bankroll, odds)
+            plot_backtest(bankroll, tracker.roi, season, f'graph_{league}_{season}.png')
