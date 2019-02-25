@@ -153,7 +153,7 @@ def main(league='F1',league_model='F1',season='2013-2014', season_model='2016-20
         #
         imax = probability.argmax()
 
-        if (probability[0] > 0.51):
+        if (probability[0] > 0.51) | (pred_home_odds < home_odds*0.97 < 3.2):
         #if (pred_home_odds < home_odds < 3.2) & (0.02 <= probability[0] - 1 / home_odds):
         #if imax == 0:
             #import pdb; pdb.set_trace()
@@ -183,7 +183,7 @@ def main(league='F1',league_model='F1',season='2013-2014', season_model='2016-20
             else:
                 bet_tracker.bet_lost()
             bank.append(bet_tracker.bankroll)
-        if (probability[2] > 0.51):
+        if (probability[2] > 0.51) | (pred_away_odds < away_odds*0.97 < 3.2):
         #elif (pred_away_odds < away_odds < 3.2) & (0.02 <= probability[2] - 1 / away_odds):
         #if imax == 1:
             #import pdb; pdb.set_trace()
@@ -213,7 +213,7 @@ def main(league='F1',league_model='F1',season='2013-2014', season_model='2016-20
             else:
                 bet_tracker.bet_lost()
             bank.append(bet_tracker.bankroll)
-        if (probability[1] > 0.51):
+        if (probability[1] > 0.51) | (pred_draw_odds < draw_odds*0.97 < 3.2):
         #elif (pred_draw_odds < draw_odds < 3.2) & (0.02 <= probability[1] - 1 / draw_odds):
         #if imax == 2:
             #import pdb; pdb.set_trace()
@@ -280,6 +280,7 @@ def plot_backtest(bankroll, roi, plot_title, name='graph.png'):
 
 if __name__ == '__main__':
     leagues=['SP1','D1','F1','E0']
+    #leagues = ['F1']
     league_model='F1'
     season_model = '2013-2014'
     seasons = ['2013-2014', '2014-2015', '2015-2016', '2016-2017', '2017-2018']
@@ -292,4 +293,4 @@ if __name__ == '__main__':
             #tracker, bankroll, odds = main(league,league_model,season, season_model)
             tracker, bankroll, odds = main(league,league,season, season)
             print(tracker, bankroll, odds)
-            plot_backtest(bankroll, tracker.roi, season, f'graph_{league}_{season}.png')
+            plot_backtest(bankroll, tracker.roi, f'graph_{league}_{season}', f'graph_{league}_{season}.png')
