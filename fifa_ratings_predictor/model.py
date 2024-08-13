@@ -1,8 +1,13 @@
 import numpy as np
+import lightgbm as lgb
 import tensorflow as tf
 
 from fifa_ratings_predictor.data_methods import normalise_features
 
+def log_loss(preds, labels):
+    """Logarithmic loss with non-necessarily-binary labels."""
+    log_likelihood = np.sum(labels * np.log(preds)) / len(preds)
+    return -log_likelihood
 
 class NeuralNet:
     def __init__(self, hidden_nodes=8, keep_prob=1.0, learning_rate=0.001):
@@ -24,7 +29,7 @@ class NeuralNet:
 
     def build_model(self):
         with self.graph.as_default():
-            self.input = tf.placeholder(tf.float32, shape=[None, 36], name='input')
+            self.input = tf.placeholder(tf.float32, shape=[None, 39], name='input')
             self.target = tf.placeholder(tf.float32, shape=[None, 3], name='target')
             self.keep_prob = tf.placeholder(tf.float32, name='keep_prob')
 
@@ -35,6 +40,8 @@ class NeuralNet:
 
             with tf.name_scope('losses') as scope:
                 self.loss = tf.losses.absolute_difference(self.target, self.output)
+                #self.loss = tf.losses.softmax_cross_entropy(self.target, self.output)
+                #self.loss = tf.losses.sigmoid_cross_entropy(self.target, self.output)
 
                 self.train = tf.train.MomentumOptimizer(self.learning_rate, 0.99).minimize(self.loss)
 
@@ -48,9 +55,22 @@ class NeuralNet:
         return writer, saver
 
     def train_model(self, X, y, X_val, y_val, model_name):
-
         best_val_loss = 0.05
         best_val_loss = 100500
+        #
+        y = np.maximum(y,X[:,-3:])
+        y_val = np.maximum(y_val,X_val[:,-3:])
+        #y = 
+        #X = X[:,:-3]
+        #y_val = X_val[:,-3:]
+        #X_val = X_val[:,:-3]
+
+        #dtrain = lgb.Dataset(X, y[:,2], free_raw_data=False)
+        #dtest = lgb.Dataset(X_val, y_val[:,2], reference=dtrain, free_raw_data=False)
+        #evallist = [dtrain, dtest]
+        ##
+        #train_params = {'learning_rate': 0.05, 'max_depth': 35, 'boosting': 'gbdt', 'objective': 'binary', 'metric': 'auc', 'num_leaves': 10000, 'min_data_in_leaf': 200, 'max_bin': 200, 'colsample_bytree' : 0.7,'subsample': 0.85, 'subsample_freq': 2, 'verbose':-1, 'seed': 1984}
+        #gbm = lgb.train(train_params, dtrain, num_boost_round=40000, valid_sets=evallist, early_stopping_rounds=50)
 
         with tf.Session(graph=self.graph) as sess:
 
@@ -90,49 +110,110 @@ class NeuralNet:
 
         return predictions
 
-
 if __name__ == '__main__':
 
     tf.set_random_seed(8)
     np.random.seed(8)
 
-    league = 'F1'
+    league = 'D1'
+    #league_1 = 'E0'
 
-    inputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2014-2015.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2015-2016.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2016-2017.npy')))
-    inputs = normalise_features(inputs)
-    outputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2013-2014.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2014-2015.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy'),
-                        np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2016-2017.npy'))).reshape(-1, 3)
+    #seasons
+    seasons = ['2013-2014', '2014-2015', '2015-2016', '2016-2017', '2017-2018']
+    #seasons = ['2013-2014','2014-2015', '2015-2016']
 
-    #inputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
+    for i in range(len(seasons)):
+        train_seasons = []
+        for sn, season in enumerate(seasons):
+            if i != sn:
+                train_seasons.append(season)
+
+        def get_inp_out(seasons):
+            inputs = []
+            outputs = []
+            for season in seasons:
+                inputs.append(np.load(f'./data/lineup-data/{league}/processed-numpy-arrays/feature-vectors-{season}.npy'))
+                outputs.append(np.load(f'./data/lineup-data/{league}/processed-numpy-arrays/targets-{season}.npy'))
+            inputs = np.vstack(inputs)
+            inputs = normalise_features(inputs)
+
+            outputs = np.vstack(outputs).reshape(-1, 3)
+            #
+            ind = ~np.isnan(inputs).any(axis=1)
+            inputs = inputs[ind,:]
+            outputs = outputs[ind,:]
+            return inputs, outputs
+
+
+
+        # inputs = np.vstack((
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2014-2015.npy'),
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2015-2016.npy'),
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2016-2017.npy'),
+        #                     ))
+        # inputs = normalise_features(inputs)
+        # outputs = np.vstack((
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2013-2014.npy'),
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2014-2015.npy'),
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy'),
+        #                     np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2016-2017.npy'),
+        #                     )).reshape(-1, 3)
+        
+        print(train_seasons)
+        inputs, outputs = get_inp_out(train_seasons)
+    #inputs = np.vstack((
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
     #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2014-2015.npy'),
-    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2015-2016.npy')))
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2015-2016.npy'),
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2016-2017.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/feature-vectors-2014-2015.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/feature-vectors-2015-2016.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/feature-vectors-2016-2017.npy'),
+    #                    ))
     #inputs = normalise_features(inputs)
-    #outputs = np.vstack((np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2013-2014.npy'),
+    #outputs = np.vstack((
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2013-2014.npy'),
     #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2014-2015.npy'),
-    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy'))).reshape(-1, 3)
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy'),
+    #                    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2016-2017.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/targets-2013-2014.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/targets-2014-2015.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/targets-2015-2016.npy'),
+    #                    np.load('./data/lineup-data/' + league_1 + '/processed-numpy-arrays/targets-2016-2017.npy'),
+    #                    )).reshape(-1, 3)
 
 
-    nan_rows = np.where(outputs != outputs)[0]
+    #inputs = np.vstack((
+    #    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2013-2014.npy'),
+    #    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2014-2015.npy'),
+    #    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/feature-vectors-2015-2016.npy')
+    #    ))
+    #inputs = normalise_features(inputs)
+    #outputs = np.vstack((
+    #    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2013-2014.npy'),
+    #    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2014-2015.npy'),
+    #    np.load('./data/lineup-data/' + league + '/processed-numpy-arrays/targets-2015-2016.npy')
+    #    )).reshape(-1, 3)
 
-    inputs = np.delete(inputs, nan_rows, axis=0)
-    outputs = np.delete(outputs, nan_rows, axis=0)
 
-    outputs = 1 / outputs
+        nan_rows = np.where(outputs != outputs)[0]
 
-    net = NeuralNet()
+        inputs = np.delete(inputs, nan_rows, axis=0)
+        outputs = np.delete(outputs, nan_rows, axis=0)
 
-    net.train_model(inputs[:-10], outputs[:-10], inputs[-10:], outputs[-10:], model_name='./models/' + league +
+        #outputs = 1 / outputs
+
+        net = NeuralNet()
+
+        net.train_model(inputs[:-50], outputs[:-50], inputs[-50:], outputs[-50:], model_name=f'./models/{league}-{seasons[i]}' +
                                                                                     '/deep')
 
-    net = NeuralNet()
+    # net = NeuralNet()
 
-    predictions = net.predict(inputs[-50:], model_name='./models/' + league + '/deep')
+    #predictions = net.predict(inputs[-50:], model_name='./models/' + league + '/deep')
 
-    for i, j in zip(predictions, outputs[-50:]):
-        print(i)
-        print(j)
+    #for i, j in zip(predictions, outputs[-50:]):
+    #    print(i)
+    #    print(j)

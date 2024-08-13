@@ -78,3 +78,10 @@ fabric.properties
 # Virtual environment
 venv/
 
+# Modela
+models/
+
+#venv
+fifa/
+./fifa/
+../fifa/
