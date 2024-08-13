@@ -9,14 +9,19 @@ from slugify import slugify
 
 
 def read_player_data(season=None):
+    #with open("./data/player-data/players-by-team.json") as json_file:
     with open("./data/player-data/players-by-team.json") as json_file:
         data = json.load(json_file)
 
     data = assign_guids(data)
 
     for _, player in data.items():
-        player["general position"] = assign_general_position(player["position"])
-        player["season"] = assign_season_to_player(player["url"])
+        player["general position"] = assign_general_position(player["info"]["position"])
+        player["info"]["general position"] = assign_general_position(player["info"]["position"])
+        player["season"] = assign_season_to_player(player["info"]["url"])
+        player["info"]["season"] = assign_season_to_player(player["info"]["url"])
+        #player["general position"] = assign_general_position(player["position"])
+        #player["season"] = assign_season_to_player(player["url"])
 
     if season is not None:
         data = {
@@ -140,13 +145,16 @@ def assign_odds_to_match(matchlineups, fd):
             away_team = None
 
         for index, row in fd.iterrows():
-
             if home_team == slugify(row["HomeTeam"]) and away_team == slugify(
                 row["AwayTeam"]
             ):
+                try:
+                    row_date = datetime.datetime.strptime(row["Date"], "%d/%m/%y")
+                except ValueError:
+                    row_date = datetime.datetime.strptime(row["Date"], "%d/%m/%Y")
                 if datetime.datetime.strptime(
                     match["info"]["date"], "%d %B %Y"
-                ) == datetime.datetime.strptime(row["Date"], "%d/%m/%y"):
+                ) == row_date:
                     match["info"]["home odds"] = row["PSH"]
                     match["info"]["draw odds"] = row["PSD"]
                     match["info"]["away odds"] = row["PSA"]

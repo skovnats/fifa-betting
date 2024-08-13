@@ -58,15 +58,19 @@ def match_lineups_to_fifa_players(lineup_names, raw_names, lineup_numbers,
 
 def assign_probability(player, name, number, nationality, team, season):
     name_probability = constants.NAME_PROBABILITY * match_name(name, player["name"])
+    #name_probability = constants.NAME_PROBABILITY * match_name(name, player["name"])
     team_probability = constants.TEAM_PROBABILITY * fuzzy_team_match(
-        team, player["team"]
+        team, player["info"]["team"]
     )
+    #team, player["team"]
     nationality_probability = constants.NATIONALITY_PROBABILITY * exact_match(
-        nationality, player["nationality"]
+        nationality, player["info"]["nationality"]
     )
+    #nationality, player["nationality"]
     number_probability = constants.NUMBER_PROBABILITY * exact_match(
-        int(number), int(player["number"])
+        int(number), int(player["info"]["kit number"])
     )
+    #int(number), int(player["info"]["kit number"])
     season_probability = constants.SEASON_PROBABILITY * exact_match(
         season, player["season"]
     )
@@ -114,16 +118,19 @@ def create_feature_vector_from_players(players):
     defence = []
     midfield = []
     attack = []
-
     for player in players:
-        if player["general position"] == "goalkeeper":
-            goalkeeper.append(int(player["rating"]))
-        elif player["general position"] == "defence":
-            defence.append(int(player["rating"]))
-        elif player["general position"] == "midfield":
-            midfield.append(int(player["rating"]))
-        elif player["general position"] == "attack":
-            attack.append(int(player["rating"]))
+        if player["info"]["general position"] == "goalkeeper":
+            #goalkeeper.append(int(player["rating"]))
+            goalkeeper.append(int(player["info"]["rating"]))
+        elif player["info"]["general position"] == "defence":
+            #defence.append(int(player["rating"]))
+            defence.append(int(player["info"]["rating"]))
+        elif player["info"]["general position"] == "midfield":
+            #midfield.append(int(player["rating"]))
+            midfield.append(int(player["info"]["rating"]))
+        elif player["info"]["general position"] == "attack":
+            #attack.append(int(player["rating"]))
+            attack.append(int(player["info"]["rating"]))
         else:
             print("Error")
 
@@ -147,14 +154,13 @@ def create_feature_vector_from_players(players):
     return goalkeeper + defence + midfield + attack
 
 
-if __name__ == "__main__":
+def extract_match_football_players_teams_games(league='F1',season='2013-2014'):
     errors = []
-
     data = read_player_data()
 
-    match_data = read_match_data(league="SP1", season="2013-2014")
+    match_data = read_match_data(league=league, season=season)
 
-    football_data = read_all_football_data(league="SP1")
+    football_data = read_all_football_data(league=league)
 
     match_data = assign_odds_to_match(match_data, football_data)
 
@@ -164,7 +170,6 @@ if __name__ == "__main__":
     cached_players = {}
 
     for i, test_match in enumerate(reversed(match_data)):
-
         season = get_season(test_match)
         home_team, away_team = get_teams(test_match)
         home_goals, away_goals = get_goals(test_match)
@@ -225,5 +230,20 @@ if __name__ == "__main__":
     feature_vectors = np.array(feature_vectors)
     targets = np.array(targets)
 
-    np.save("feature-vectors-13-14.npy", feature_vectors)
-    np.save("targets-13-14.npy", targets)
+    np.save("feature-vectors-{}.npy".format(season), feature_vectors)
+    np.save("targets-{}.npy".format(season), targets)
+
+
+if __name__ == "__main__":
+    #
+    leagues = ['F1']
+    seasons = ["2013-2014","2014-2015","2015-2016","2016-2017","2017-2018","2018-2019"]
+    #seasons = ["2017-2018","2018-2019"]
+    #seasons = ["2018-2019"]
+    #
+    for season in seasons:
+        for league in leagues:
+            print(f'{league}-{season}')
+            extract_match_football_players_teams_games(league,season)
+
+

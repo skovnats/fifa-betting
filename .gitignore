@@ -16,6 +16,10 @@ tf-log/
 *.ipynb
 *.egg-info
 *.pkl
+.DS_Store
+*.DS_Store
+crawler/crawler/.DS_Store
+__pycache__/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### JetBrains template
